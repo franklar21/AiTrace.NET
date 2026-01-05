@@ -1,9 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+
+		<PackageId>AiTrace</PackageId>
+		<Version>0.1.0-preview.1</Version>
+		<Authors>François Larouche</Authors>
+		<Description>Audit &amp; proof layer for AI decisions in .NET. Record prompts and outputs with hashes and timestamps to create verifiable audit trails.</Description>
+		<PackageTags>dotnet;ai;llm;audit;compliance;logging;tracing</PackageTags>
+
+		<RepositoryUrl>https://github.com/franklar21/AiTrace.NET</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="..\..\README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
 
 </Project>
