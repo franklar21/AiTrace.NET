@@ -24,6 +24,7 @@ dotnet add package AiTrace --prerelease
 
 By default, audit files are written to a local `./aitrace` folder next to your application's executable.
 
+
 ~~~csharp
 using AiTrace;
 
@@ -56,6 +57,26 @@ This creates an **immutable JSON audit record** containing:
 - user identifier
 - prompt and output (optional)
 - structured metadata
+
+---
+
+## Typical use cases
+
+AiTrace.NET is useful when you need to:
+- keep an auditable record of AI-driven decisions
+- investigate incidents or user disputes involving AI output
+- comply with internal or external audit requirements
+- understand how prompts and outputs evolve over time
+
+---
+
+## Example scenarios
+
+AiTrace.NET can be used, for example, to audit:
+- loan approval or risk scoring decisions
+- automated content moderation systems
+- AI-generated recommendations shown to users
+- internal tools where AI output impacts business decisions
 
 ---
 
