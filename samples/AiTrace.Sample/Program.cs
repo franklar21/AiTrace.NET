@@ -1,4 +1,5 @@
 ﻿using AiTrace;
+using AiTrace.Pro;
 
 AiTrace.AiTrace.Configure(o =>
 {
@@ -24,3 +25,11 @@ await AiTrace.AiTrace.LogDecisionAsync(decision);
 
 Console.WriteLine("Logged. Check the ./aitrace folder next to the executable.");
 Console.WriteLine($"Base directory: {AppContext.BaseDirectory}");
+
+// --- Pro verification (temporary test) ---
+var auditDir = Path.Combine(AppContext.BaseDirectory, "aitrace");
+var result = AiTracePro.Verify(auditDir);
+
+Console.WriteLine(result.IsValid
+    ? "VERIFY OK"
+    : $"VERIFY FAIL: {result.Reason}");

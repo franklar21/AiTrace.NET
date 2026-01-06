@@ -20,7 +20,14 @@ public sealed class JsonAuditStore : IAuditStore
     {
         if (record is null) throw new ArgumentNullException(nameof(record));
 
-        // One file per record: simple, robust, diffable.
+        // 1) Chain hashing: find previous hash
+        var prev = TryGetLastHash(_directory);
+        record.PrevHashSha256 = prev;
+
+        // 2) Recompute hash INCLUDING PrevHashSha256
+        record.HashSha256 = AuditHasher.ComputeRecordHash(record);
+
+        // 3) One file per record: simple, robust, diffable
         var fileName = $"{record.TimestampUtc:yyyyMMdd_HHmmss}_{record.Id}.json";
         var path = Path.Combine(_directory, fileName);
 
@@ -29,6 +36,35 @@ public sealed class JsonAuditStore : IAuditStore
             WriteIndented = true
         });
 
-        await File.WriteAllTextAsync(path, json, Encoding.UTF8, ct).ConfigureAwait(false);
+        await File.WriteAllTextAsync(path, json, Encoding.UTF8, ct)
+            .ConfigureAwait(false);
+    }
+
+    private static string? TryGetLastHash(string auditDir)
+    {
+        if (!Directory.Exists(auditDir)) return null;
+
+        var lastFile = Directory.GetFiles(auditDir, "*.json", SearchOption.AllDirectories)
+            .OrderByDescending(File.GetLastWriteTimeUtc)
+            .FirstOrDefault();
+
+        if (lastFile is null) return null;
+
+        var json = File.ReadAllText(lastFile);
+
+        const string key = "\"HashSha256\":";
+        var i = json.IndexOf(key, StringComparison.OrdinalIgnoreCase);
+        if (i < 0) return null;
+
+        i += key.Length;
+        while (i < json.Length && char.IsWhiteSpace(json[i])) i++;
+        if (i >= json.Length || json[i] != '"') return null;
+        i++;
+
+        var j = json.IndexOf('"', i);
+        if (j < 0) return null;
+
+        var value = json.Substring(i, j - i);
+        return string.IsNullOrWhiteSpace(value) ? null : value;
     }
 }

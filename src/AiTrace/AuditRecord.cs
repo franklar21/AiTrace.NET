@@ -7,8 +7,8 @@ public sealed record AuditRecord
 {
     public required string Id { get; init; }                 // Unique id for this record
     public required DateTimeOffset TimestampUtc { get; init; }
-    public required string HashSha256 { get; init; }          // Integrity proof
-
+    public string HashSha256 { get; set; } = string.Empty;
+    public string? PrevHashSha256 { get; set; }
     public string? Model { get; init; }
     public string? UserId { get; init; }
 
