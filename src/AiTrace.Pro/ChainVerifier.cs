@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using AiTrace;
+using AiTrace.Pro.Signing;
 
 namespace AiTrace.Pro.Verification;
 
@@ -9,6 +10,14 @@ public sealed class ChainVerifier
     {
         PropertyNameCaseInsensitive = true
     };
+
+    private readonly SignatureOptions _sig;
+
+    // ✅ Nouveau: injection optionnelle pour vérifier les signatures
+    public ChainVerifier(SignatureOptions? signatureOptions = null)
+    {
+        _sig = signatureOptions ?? new SignatureOptions();
+    }
 
     public VerificationResult Verify(string auditDirectory)
     {
@@ -53,6 +62,27 @@ public sealed class ChainVerifier
                     $"Hash mismatch in '{Path.GetFileName(file)}'. Expected {expected} but found {record.HashSha256 ?? "(null)"}.");
             }
 
+            // ✅ 1.5) Vérifie la signature si elle est présente
+            var hasSignature =
+                !string.IsNullOrWhiteSpace(record.Signature) &&
+                !string.IsNullOrWhiteSpace(record.SignatureAlgorithm);
+
+            if (hasSignature)
+            {
+                if (_sig.SignatureService is null)
+                {
+                    return VerificationResult.Fail(idx,
+                        $"Signature present in '{Path.GetFileName(file)}' but no SignatureService configured.");
+                }
+
+                var ok = _sig.SignatureService.Verify(record.HashSha256, record.Signature!);
+                if (!ok)
+                {
+                    return VerificationResult.Fail(idx,
+                        $"Signature invalid in '{Path.GetFileName(file)}'.");
+                }
+            }
+
             // 2) Vérifie la chaîne si PrevHashSha256 est présent
             if (idx == 0)
             {
@@ -60,8 +90,6 @@ public sealed class ChainVerifier
             }
             else
             {
-                // Si record.PrevHashSha256 est vide, on ne peut pas prouver la chain
-                // (mais le record est déjà prouvé individuellement via son HashSha256).
                 if (!string.IsNullOrWhiteSpace(record.PrevHashSha256))
                 {
                     if (!string.Equals(record.PrevHashSha256, lastHash, StringComparison.OrdinalIgnoreCase))

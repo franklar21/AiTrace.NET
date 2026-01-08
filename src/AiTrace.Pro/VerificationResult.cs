@@ -11,4 +11,8 @@ public sealed class VerificationResult
 
     public static VerificationResult Fail(int index, string reason)
         => new() { IsValid = false, FailedIndex = index, Reason = reason };
+
+    public bool SignatureChecked { get; init; }
+    public bool SignatureValid { get; init; }
+
 }

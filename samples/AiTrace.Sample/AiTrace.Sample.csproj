@@ -8,6 +8,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="aitrace_public.pem" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="aitrace_public.pem">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\AiTrace.Pro\AiTrace.Pro.csproj" />
     <ProjectReference Include="..\..\src\AiTrace\AiTrace.csproj" />
   </ItemGroup>

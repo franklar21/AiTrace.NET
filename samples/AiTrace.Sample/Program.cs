@@ -8,15 +8,11 @@ AiTrace.AiTrace.Configure(o =>
     o.StoreContent = true;
     o.BasicRedaction = true;
 
-    // IMPORTANT: for now, load a PEM private key from disk (dev-only).
-    // We'll later provide a proper key management story and tooling.
-    var privateKeyPemPath = @"C:\temp\aitrace_private.pem";
-    var privateKeyPem = File.ReadAllText(privateKeyPemPath);
-
+    var privateKeyPem = File.ReadAllText(@"C:\temp\aitrace_private.pem");
     var signer = new RsaAuditSignatureService(privateKeyPem);
 
-    // Wrap the default JSON store with a signed store (Pro).
-    o.Store = new SignedAuditStore(new JsonAuditStore(), signer);
+    // Pro store that computes PrevHash + Hash THEN signs THEN writes
+    o.Store = new SignedJsonAuditStore(signer);
 
 });
 
@@ -43,5 +39,5 @@ var auditDir = Path.Combine(AppContext.BaseDirectory, "aitrace");
 var result = AiTracePro.Verify(auditDir);
 
 Console.WriteLine(result.IsValid
-    ? "VERIFY OK"
+    ? "VERIFY OK (integrity + signature verified)"
     : $"VERIFY FAIL: {result.Reason}");
