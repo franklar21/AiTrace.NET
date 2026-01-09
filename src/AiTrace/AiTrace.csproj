@@ -7,7 +7,7 @@
 
     <!-- NuGet package metadata -->
     <PackageId>AiTrace</PackageId>
-    <Version>0.1.0-preview.2</Version>
+    <Version>0.1.0-preview.4</Version>
     <Authors>François Larouche</Authors>
     <Description>Audit &amp; proof layer for AI decisions in .NET. Record prompts and outputs with hashes and timestamps to create verifiable audit trails.</Description>
     <PackageTags>dotnet;ai;llm;audit;compliance;logging;tracing</PackageTags>

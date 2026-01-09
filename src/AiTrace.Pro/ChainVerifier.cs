@@ -148,4 +148,63 @@ public sealed class ChainVerifier
 
         return VerificationResult.Ok();
     }
+
+    public ComplianceVerificationSummary VerifySummary(
+    string auditDirectory,
+    bool signatureRequired = false)
+    {
+        // On appelle Verify() (ton moteur existant)
+        var result = Verify(auditDirectory);
+
+        // Scope stats (best-effort)
+        int filesVerified = 0;
+        DateTimeOffset? firstUtc = null;
+        DateTimeOffset? lastUtc = null;
+        bool anySignaturePresent = false;
+
+        if (Directory.Exists(auditDirectory))
+        {
+            var files = Directory.GetFiles(auditDirectory, "*.json", SearchOption.AllDirectories)
+                .OrderBy(Path.GetFileName)
+                .ToArray();
+
+            filesVerified = files.Length;
+
+            foreach (var f in files)
+            {
+                try
+                {
+                    var json = File.ReadAllText(f);
+                    var record = JsonSerializer.Deserialize<AuditRecord>(json, JsonOptions);
+                    if (record is null) continue;
+
+                    // range
+                    if (firstUtc is null || record.TimestampUtc < firstUtc) firstUtc = record.TimestampUtc;
+                    if (lastUtc is null || record.TimestampUtc > lastUtc) lastUtc = record.TimestampUtc;
+
+                    // signature presence
+                    if (!string.IsNullOrWhiteSpace(record.Signature) &&
+                        !string.IsNullOrWhiteSpace(record.SignatureAlgorithm))
+                    {
+                        anySignaturePresent = true;
+                    }
+                }
+                catch
+                {
+                    // ignore: Verify() already reports parse errors; this is best-effort scope
+                }
+            }
+        }
+
+        // Build summary from result + scope
+        return ComplianceSummaryBuilder.FromResult(
+            result,
+            filesVerified: filesVerified,
+            firstUtc: firstUtc,
+            lastUtc: lastUtc,
+            anySignaturePresent: anySignaturePresent,
+            signatureRequired: signatureRequired
+        );
+    }
+
 }

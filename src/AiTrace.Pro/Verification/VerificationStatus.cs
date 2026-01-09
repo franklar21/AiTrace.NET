@@ -10,8 +10,9 @@ public enum VerificationStatus
 
     // Signature issues
     SignatureInvalid,
-    SignatureMissing,
+    SignatureNotPresent,
     SignatureServiceMissing,
+    SignatureRequiredButMissing,
 
     // Input / file issues
     DirectoryNotFound,

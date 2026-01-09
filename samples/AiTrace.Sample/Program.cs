@@ -2,6 +2,7 @@
 using AiTrace.Pro;
 using AiTrace.Pro.Signing;
 using AiTrace.Pro.Stores;
+using AiTrace.Pro.Verification;
 
 AiTrace.AiTrace.Configure(o =>
 {
@@ -11,9 +12,7 @@ AiTrace.AiTrace.Configure(o =>
     var privateKeyPem = File.ReadAllText(@"C:\temp\aitrace_private.pem");
     var signer = new RsaAuditSignatureService(privateKeyPem);
 
-    // Pro store that computes PrevHash + Hash THEN signs THEN writes
     o.Store = new SignedJsonAuditStore(signer);
-
 });
 
 var decision = new AiDecision
@@ -31,13 +30,25 @@ var decision = new AiDecision
 
 await AiTrace.AiTrace.LogDecisionAsync(decision);
 
-Console.WriteLine("Logged. Check the ./aitrace folder next to the executable.");
+Console.WriteLine("Logged. Check the ./aitrace folder next to your executable.");
 Console.WriteLine($"Base directory: {AppContext.BaseDirectory}");
 
-// --- Pro verification (temporary test) ---
 var auditDir = Path.Combine(AppContext.BaseDirectory, "aitrace");
 var result = AiTracePro.Verify(auditDir);
 
 Console.WriteLine(result.IsValid
     ? "VERIFY OK (integrity + signature verified)"
     : $"VERIFY FAIL: {result.Reason}");
+
+var publicKeyPem = File.ReadAllText(@"C:\temp\aitrace_public.pem");
+var sigOpts = new SignatureOptions
+{
+    SignatureService = new RsaAuditSignatureService(publicKeyPem)
+};
+
+var verifier = new ChainVerifier(sigOpts);
+var summary = verifier.VerifySummary(auditDir, signatureRequired: true);
+
+Console.WriteLine($"SUMMARY: Status={summary.Status}, Files={summary.FilesVerified}, Signature={summary.SignatureStatus}");
+Console.WriteLine();
+Console.WriteLine(ComplianceReportWriter.ToTextReport(summary));
