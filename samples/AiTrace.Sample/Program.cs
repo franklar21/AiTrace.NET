@@ -1,9 +1,9 @@
 ﻿using AiTrace;
-using AiTrace.Pro;
 using AiTrace.Pro.Signing;
 using AiTrace.Pro.Stores;
 using AiTrace.Pro.Verification;
 
+// ---- Configure AiTrace (Pro signing store) ----
 AiTrace.AiTrace.Configure(o =>
 {
     o.StoreContent = true;
@@ -12,9 +12,11 @@ AiTrace.AiTrace.Configure(o =>
     var privateKeyPem = File.ReadAllText(@"C:\temp\aitrace_private.pem");
     var signer = new RsaAuditSignatureService(privateKeyPem);
 
+    // Pro store: computes PrevHash + Hash, then signs, then writes JSON files
     o.Store = new SignedJsonAuditStore(signer);
 });
 
+// ---- Log one decision ----
 var decision = new AiDecision
 {
     Prompt = "Summarize: The quick brown fox jumps over the lazy dog.",
@@ -30,16 +32,14 @@ var decision = new AiDecision
 
 await AiTrace.AiTrace.LogDecisionAsync(decision);
 
-Console.WriteLine("Logged. Check the ./aitrace folder next to your executable.");
-Console.WriteLine($"Base directory: {AppContext.BaseDirectory}");
+// ---- Paths ----
+var baseDir = AppContext.BaseDirectory;
+var auditDir = Path.Combine(baseDir, "aitrace");
 
-var auditDir = Path.Combine(AppContext.BaseDirectory, "aitrace");
-var result = AiTracePro.Verify(auditDir);
+Console.WriteLine("Logged audit record.");
+Console.WriteLine($"Audit directory: {auditDir}");
 
-Console.WriteLine(result.IsValid
-    ? "VERIFY OK (integrity + signature verified)"
-    : $"VERIFY FAIL: {result.Reason}");
-
+// ---- Verify (integrity + signature) ----
 var publicKeyPem = File.ReadAllText(@"C:\temp\aitrace_public.pem");
 var sigOpts = new SignatureOptions
 {
@@ -49,6 +49,20 @@ var sigOpts = new SignatureOptions
 var verifier = new ChainVerifier(sigOpts);
 var summary = verifier.VerifySummary(auditDir, signatureRequired: true);
 
+Console.WriteLine(summary.IsValid
+    ? "VERIFY OK (integrity + signature verified)"
+    : $"VERIFY FAIL: {summary.Reason}");
+
 Console.WriteLine($"SUMMARY: Status={summary.Status}, Files={summary.FilesVerified}, Signature={summary.SignatureStatus}");
-Console.WriteLine();
-Console.WriteLine(ComplianceReportWriter.ToTextReport(summary));
+
+// ---- Export compliance report to disk ----
+var reportPath = Path.Combine(auditDir, "compliance_report.txt");
+
+ComplianceReportExporter.WriteTextReport(
+    auditDir,
+    reportPath,
+    verifier,
+    signatureRequired: true
+);
+
+Console.WriteLine($"Compliance report written to: {reportPath}");
