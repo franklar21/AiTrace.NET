@@ -66,3 +66,15 @@ ComplianceReportExporter.WriteTextReport(
 );
 
 Console.WriteLine($"Compliance report written to: {reportPath}");
+
+var jsonReportPath = Path.Combine(auditDir, "compliance_report.json");
+
+ComplianceReportJsonExporter.WriteJsonReport(
+    auditDir,
+    jsonReportPath,
+    verifier,
+    signatureRequired: true
+);
+
+Console.WriteLine($"Compliance JSON report written to: {jsonReportPath}");
+
