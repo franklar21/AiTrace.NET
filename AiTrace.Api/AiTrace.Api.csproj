@@ -7,7 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.12" />
+    <ProjectReference Include="..\src\AiTrace\AiTrace.csproj" />
+    <ProjectReference Include="..\src\AiTrace.Pro\AiTrace.Pro.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
   </ItemGroup>
 
